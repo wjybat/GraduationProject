@@ -7,7 +7,8 @@ import re
 
 # 按间距中的绿色按钮以运行脚本。
 if __name__ == '__main__':
-    condition={'tok':False,'words_bag':False,'sort':False,'sentencing':False,'TF':False,'KMeans':True,'ner':False,'test':False}
+    condition={'tok':False,'words_bag':False,'sort':False,'sentencing':False,'TF':False,'KMeans':False,'ner':True,
+               'classify':False,'test':False}
 
     if condition['test']:
         HanLP = hanlp.load(hanlp.pretrained.mtl.CLOSE_TOK_POS_NER_SRL_DEP_SDP_CON_ELECTRA_SMALL_ZH)
@@ -174,7 +175,7 @@ if __name__ == '__main__':
         WriteFile.close()
 
     if condition['KMeans']:
-        k=9
+        k=3
         ReadFile = open('TFIDFScore.txt', mode='r', encoding='ANSI')
         total_sentences_count = len(ReadFile.readlines())
         ReadFile.seek(0,0)
@@ -199,7 +200,7 @@ if __name__ == '__main__':
                 distance+=(a[serial]-b[serial])**2
             return distance
         changed=True
-        times=10000
+        times=100
         while times>0 and changed:
             changed=False
             index_score=0
@@ -229,6 +230,9 @@ if __name__ == '__main__':
                 if cores[num]!=mean:
                     cores[num]=mean
                     changed=True
+                # else:
+                #     print(cores[num])
+                #     print(mean)
             times-=1
         ReadFile1 = open('分句.txt', mode='r', encoding='ANSI')
         sentences=ReadFile1.readlines()
@@ -247,13 +251,45 @@ if __name__ == '__main__':
 
     if condition['ner']:
         HanLP = hanlp.load(hanlp.pretrained.mtl.CLOSE_TOK_POS_NER_SRL_DEP_SDP_CON_ELECTRA_SMALL_ZH)
-        ResFile=open('resNER.txt',mode='w')
-        with open('天津市突发地质灾害应急预案.txt',mode='r') as OriFile:
+        ResFile=open('resNERpretty.txt',mode='w',encoding='ANSI')
+        WriteFile1=open('class_org.txt',mode='w',encoding='ANSI')
+        WriteFile2 = open('class_loc.txt', mode='w', encoding='ANSI')
+        with open('天津市突发地质灾害应急预案.txt',mode='r',encoding='ANSI') as OriFile:
             line = OriFile.readline()
             while line:
                 if line.strip()!='':
-                    ResFile.write(str(HanLP(line.strip())["ner/msra"])+'\n')
+                    outcome=HanLP(line.strip(),tasks="ner/msra")["ner/msra"]
+                    written_in_org=False
+                    written_in_loc = False
+                    for_write=str(outcome)
+                    if for_write!='[]':
+                        ResFile.write(for_write+'\n')
+                    for item in outcome:
+                        if item[1]=='ORGANIZATION' and not written_in_org:
+                            WriteFile1.write(line+'\n')
+                            written_in_org=True
+                        if item[1]=='LOCATION' and not written_in_loc:
+                            WriteFile2.write(line+'\n')
+                            written_in_loc=True
                 line = OriFile.readline()
             OriFile.close()
         ResFile.close()
 
+    if condition['classify']:
+        ReadFile=open('分句.txt',mode='r',encoding='ANSI')
+        WriteFile=open('classification.txt',mode='w',encoding='ANSI')
+        WriteFile.write('组织机构'+'\n')
+        ReadLine=ReadFile.readline().strip()
+        while ReadLine:
+            if re.match(r'.*[局部委队院站][^长员].*', ReadLine) or re.match(r'.*办公室.*',ReadLine):
+                WriteFile.write(ReadLine+'\n'+'\n')
+            ReadLine=ReadFile.readline().strip()
+        WriteFile.write('地址'+'\n')
+        ReadFile.seek(0,0)
+        ReadLine = ReadFile.readline().strip()
+        while ReadLine:
+            if re.match(r'.*天津.*', ReadLine) or re.match(r'.*蓟州.*', ReadLine):
+                WriteFile.write(ReadLine + '\n'+'\n')
+            ReadLine = ReadFile.readline().strip()
+        ReadFile.close()
+        WriteFile.close()
