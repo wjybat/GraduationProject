@@ -2,12 +2,11 @@ import math
 import string
 
 import hanlp
-import os
 import re
 
 # 按间距中的绿色按钮以运行脚本。
 if __name__ == '__main__':
-    condition={'tok':False,'words_bag':False,'sort':False,'sentencing':False,'TF':False,'KMeans':False,'ner':True,
+    condition={'tok':True,'words_bag':False,'sort':False,'sentencing':False,'TF':False,'KMeans':False,'ner':False,
                'classify':False,'test':False}
 
     if condition['test']:
@@ -20,7 +19,7 @@ if __name__ == '__main__':
 
     if condition['tok']:
         HanLP = hanlp.load(hanlp.pretrained.mtl.CLOSE_TOK_POS_NER_SRL_DEP_SDP_CON_ELECTRA_SMALL_ZH)
-        ResFile=open('resTOKpretty.txt',mode='w')
+        ResFile=open(r'result\tokens_init.txt',mode='w')
         with open('天津市突发地质灾害应急预案.txt',mode='r') as OriFile:
             line = OriFile.readline()
             while line:
