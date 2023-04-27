@@ -190,6 +190,7 @@ if __name__ == '__main__':
         cores.append(scores[-1])
         catalog=[-1 for _ in scores]
         ReadFile.seek(0,0)
+
         def eula_dist(a,b):
             if len(a)!=len(b):
                 print('wrong dimension!')
